@@ -1,4 +1,4 @@
-local AppleCheats = loadstring(game:HttpGet("https://raw.githubusercontent.com/Proxo123/applecheats-lib/main/AppleCheats.lua"))()
+local AppleCheats = loadstring(game:HttpGet("https://raw.githubusercontent.com/Proxo123/applecheats-lib/4cd32cc/AppleCheats.lua"))()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -305,19 +305,26 @@ end)
 
 local AimCol2 = AimbotTab:AddColumn("Target:")
 AimCol2:AddLabel("Hold RMB to aim")
-AimCol2:AddCheckbox("Head", true, function(v)
+local PartToggles = {}
+local function SetAimPart(part, toggles)
+	Config.AimbotPart = part
+	for name, toggle in pairs(toggles) do
+		toggle:Set(name == part)
+	end
+end
+PartToggles.Head = AimCol2:AddCheckbox("Head", true, function(v)
 	if v then
-		Config.AimbotPart = "Head"
+		SetAimPart("Head", PartToggles)
 	end
 end)
-AimCol2:AddCheckbox("HumanoidRootPart", false, function(v)
+PartToggles.HumanoidRootPart = AimCol2:AddCheckbox("HumanoidRootPart", false, function(v)
 	if v then
-		Config.AimbotPart = "HumanoidRootPart"
+		SetAimPart("HumanoidRootPart", PartToggles)
 	end
 end)
-AimCol2:AddCheckbox("UpperTorso", false, function(v)
+PartToggles.UpperTorso = AimCol2:AddCheckbox("UpperTorso", false, function(v)
 	if v then
-		Config.AimbotPart = "UpperTorso"
+		SetAimPart("UpperTorso", PartToggles)
 	end
 end)
 
