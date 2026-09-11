@@ -1,5 +1,5 @@
-local LIB_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-lib/main/AppleCheats.lua?v=1.1.0"
-local SILENT_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-aimbot-esp/main/silent.lua?v=1"
+local LIB_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-lib/main/AppleCheats.lua?v=1.1.1"
+local SILENT_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-aimbot-esp/main/silent.lua?v=2"
 
 local AppleCheats = loadstring(game:HttpGet(LIB_URL))()
 local Silent = loadstring(game:HttpGet(SILENT_URL))()
