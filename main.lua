@@ -1,4 +1,8 @@
-local AppleCheats = loadstring(game:HttpGet("https://raw.githubusercontent.com/Proxo123/applecheats-lib/main/AppleCheats.lua"))()
+local LIB_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-lib/main/AppleCheats.lua?v=1.1.0"
+local SILENT_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-aimbot-esp/main/silent.lua?v=1"
+
+local AppleCheats = loadstring(game:HttpGet(LIB_URL))()
+local Silent = loadstring(game:HttpGet(SILENT_URL))()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -7,7 +11,6 @@ local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
 
 local Config = {
 	Aimbot = false,
@@ -17,6 +20,10 @@ local Config = {
 	AimbotVisibleOnly = false,
 	AimbotPart = "Head",
 	AimbotKey = Enum.UserInputType.MouseButton2,
+	SilentAim = false,
+	SilentFov = 200,
+	SilentTeamCheck = true,
+	SilentVisibleCheck = true,
 	BoxEsp = true,
 	NameEsp = true,
 	DistanceEsp = true,
@@ -34,6 +41,24 @@ local function AddConnection(signal, fn)
 	local conn = signal:Connect(fn)
 	table.insert(Connections, conn)
 	return conn
+end
+
+local function SyncSilent()
+	Silent.UpdateConfig({
+		Enabled = Config.SilentAim,
+		TeamCheck = Config.SilentTeamCheck,
+		VisibleCheck = Config.SilentVisibleCheck,
+		Fov = Config.SilentFov,
+	})
+	if Config.SilentAim then
+		local ok = Silent.SetEnabled(true)
+		if not ok then
+			AppleCheats:Notify("silent aim needs getactors/run_on_actor", 4)
+			Config.SilentAim = false
+		end
+	else
+		Silent.SetEnabled(false)
+	end
 end
 
 local function IsTeammate(player)
@@ -68,17 +93,13 @@ local function GetDistance(fromPos, toPos)
 	return (fromPos - toPos).Magnitude
 end
 
-local function IsOnScreen(pos, screenPos)
-	return screenPos.Z > 0 and pos.X > 0 and pos.X < Camera.ViewportSize.X and pos.Y > 0 and pos.Y < Camera.ViewportSize.Y
-end
-
 local function IsVisible(origin, targetPart)
 	if not targetPart then
 		return false
 	end
 	local rayParams = RaycastParams.new()
 	rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-	rayParams.FilterDescendantsInstances = {LocalPlayer.Character or LocalPlayer, Camera}
+	rayParams.FilterDescendantsInstances = { LocalPlayer.Character or LocalPlayer, Camera }
 	local result = Workspace:Raycast(origin, (targetPart.Position - origin).Unit * GetDistance(origin, targetPart.Position), rayParams)
 	if not result then
 		return true
@@ -102,6 +123,16 @@ local FovCircle = CreateDrawing("Circle", {
 	Filled = false,
 	NumSides = 64,
 	Radius = Config.AimbotFov,
+	Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2),
+})
+
+local SilentFovCircle = CreateDrawing("Circle", {
+	Visible = false,
+	Thickness = 1,
+	Color = Color3.fromRGB(255, 80, 80),
+	Filled = false,
+	NumSides = 64,
+	Radius = Config.SilentFov,
 	Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2),
 })
 
@@ -253,6 +284,10 @@ local function UpdateAimbot()
 	FovCircle.Radius = Config.AimbotFov
 	FovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
+	SilentFovCircle.Visible = Config.SilentAim
+	SilentFovCircle.Radius = Config.SilentFov
+	SilentFovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
 	if not Config.Aimbot then
 		return
 	end
@@ -286,6 +321,7 @@ local MiscTab = Window:AddTab("Misc")
 local AimCol = AimbotTab:AddColumn("Aimbot:")
 AimCol:AddCheckbox("Enabled", false, function(v)
 	Config.Aimbot = v
+	print("[applecheats] aimbot", v)
 end)
 AimCol:AddCheckbox("Team check", true, function(v)
 	Config.AimbotTeamCheck = v
@@ -301,6 +337,26 @@ AimCol:AddSlider("FOV radius", 20, 400, 120, function(v)
 end)
 AimCol:AddSlider("Smoothness", 1, 20, 8, function(v)
 	Config.AimbotSmooth = v
+end)
+
+local SilentCol = AimbotTab:AddColumn("Silent:")
+SilentCol:AddLabel("Actor getgc method")
+SilentCol:AddCheckbox("Silent aim", false, function(v)
+	Config.SilentAim = v
+	print("[applecheats] silent", v)
+	SyncSilent()
+end)
+SilentCol:AddCheckbox("Team check", true, function(v)
+	Config.SilentTeamCheck = v
+	SyncSilent()
+end)
+SilentCol:AddCheckbox("Visible check", true, function(v)
+	Config.SilentVisibleCheck = v
+	SyncSilent()
+end)
+SilentCol:AddSlider("Silent FOV", 50, 500, 200, function(v)
+	Config.SilentFov = v
+	SyncSilent()
 end)
 
 local AimCol2 = AimbotTab:AddColumn("Target:")
@@ -331,6 +387,7 @@ end)
 local EnvCol = VisualsTab:AddColumn("Player:")
 EnvCol:AddCheckbox("Box", true, function(v)
 	Config.BoxEsp = v
+	print("[applecheats] box", v)
 end)
 EnvCol:AddCheckbox("Name", true, function(v)
 	Config.NameEsp = v
@@ -351,11 +408,16 @@ VisMisc:AddCheckbox("Team check", true, function(v)
 end)
 
 local MiscCol = MiscTab:AddColumn(nil)
+MiscCol:AddButton("Test toggle print", function()
+	print("[applecheats] button works")
+	AppleCheats:Notify("button works", 2)
+end)
 MiscCol:AddButton("Unload", function()
 	if Unloaded then
 		return
 	end
 	Unloaded = true
+	Silent.Unload()
 	for _, conn in ipairs(Connections) do
 		conn:Disconnect()
 	end
@@ -390,4 +452,8 @@ AddConnection(Players.PlayerRemoving, function(player)
 	end
 end)
 
-AppleCheats:Notify("applecheats aimbot + esp loaded", 4)
+if Silent.IsSupported() then
+	AppleCheats:Notify("loaded - actor silent ready", 4)
+else
+	AppleCheats:Notify("loaded - silent needs actor apis", 4)
+end
