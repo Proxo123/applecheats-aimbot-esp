@@ -1,4 +1,4 @@
-local LIB_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-lib/83b6554/AppleCheats.lua"
+local LIB_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-lib/1892951/AppleCheats.lua"
 local SILENT_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-aimbot-esp/main/silent.lua"
 
 local AppleCheats = loadstring(game:HttpGet(LIB_URL))()
@@ -311,7 +311,7 @@ end
 local Window = AppleCheats:CreateWindow({
 	Title = "APPLE CHEATS",
 	Subtitle = "menu is only usable in game",
-	Keybind = Enum.KeyCode.Insert,
+	Keybind = Enum.KeyCode.RightShift,
 })
 
 local AimbotTab = Window:AddTab("Aimbot")
