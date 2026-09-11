@@ -52,19 +52,68 @@ local function flagVal(name, default)
 	return v
 end
 
+local function GetSilentTarget()
+	if not flagOn("SilentAim") then
+		return nil
+	end
+	local fov = tonumber(flagVal("SilentFOV", 200)) or 200
+	local center = Camera.ViewportSize * 0.5
+	local closest
+	local closestDist = fov
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player == LocalPlayer then
+			continue
+		end
+		if flagOn("SilentTeamCheck", true) then
+			local lt, tt = LocalPlayer.Team, player.Team
+			if lt and tt and lt == tt then
+				continue
+			end
+		end
+		local character = player.Character
+		local head = character and character:FindFirstChild("Head")
+		local root = GetRoot(character)
+		local hum = character and character:FindFirstChildOfClass("Humanoid")
+		if not character or not head or not root or not hum or hum.Health <= 0 then
+			continue
+		end
+		local aimPart = head
+		if game.PlaceId == 286090429 then
+			aimPart = character:FindFirstChild("Hitbox") or head
+		end
+		local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+		if not onScreen or pos.Z <= 0 then
+			continue
+		end
+		if flagOn("SilentVisibleCheck", true) and not IsVisible(Camera.CFrame.Position, aimPart) then
+			continue
+		end
+		local dist2d = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+		if dist2d < closestDist then
+			closestDist = dist2d
+			closest = aimPart
+		end
+	end
+	return closest
+end
+
 local function SyncSilent()
+	local enabled = flagOn("SilentAim")
 	Silent.UpdateConfig({
-		Enabled = flagOn("SilentAim"),
+		Enabled = enabled,
 		TeamCheck = flagOn("SilentTeamCheck", true),
 		VisibleCheck = flagOn("SilentVisibleCheck", true),
 		Fov = tonumber(flagVal("SilentFOV", 200)) or 200,
 	})
-	if flagOn("SilentAim") then
+	if enabled then
 		if not Silent.SetEnabled(true) then
-			library:Notify("silent needs getactors/run_on_actor", 4)
+			library:Notify({ Text = "silent needs hookmetamethod", Time = 4 })
 		end
+		Silent.SetTarget(GetSilentTarget())
 	else
 		Silent.SetEnabled(false)
+		Silent.SetTarget(nil)
 	end
 end
 
@@ -398,5 +447,5 @@ end)
 if Silent.IsSupported() then
 	library:Notify({ Text = "loaded - pepsi ui + silent ready", Time = 4 })
 else
-	library:Notify({ Text = "loaded - silent needs actor apis", Time = 4 })
+	library:Notify({ Text = "loaded - silent needs hookmetamethod", Time = 4 })
 end
