@@ -1,4 +1,4 @@
-local LIB_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-lib/1892951/AppleCheats.lua"
+local LIB_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-lib/4b2b0fb/AppleCheats.lua"
 local SILENT_URL = "https://raw.githubusercontent.com/Proxo123/applecheats-aimbot-esp/main/silent.lua"
 
 local AppleCheats = loadstring(game:HttpGet(LIB_URL))()
