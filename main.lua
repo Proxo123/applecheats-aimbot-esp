@@ -1,4 +1,4 @@
-local AppleCheats = loadstring(game:HttpGet("https://raw.githubusercontent.com/Proxo123/applecheats-lib/4cd32cc/AppleCheats.lua"))()
+local AppleCheats = loadstring(game:HttpGet("https://raw.githubusercontent.com/Proxo123/applecheats-lib/main/AppleCheats.lua"))()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
